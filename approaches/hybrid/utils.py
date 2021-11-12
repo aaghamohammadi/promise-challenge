@@ -9,11 +9,7 @@ from sklearn.metrics import matthews_corrcoef
 
 def bug_columns(df, label='induces'):
     """return all columns from the bug-matrix"""
-    jlip = []
-    for col in df.columns:
-        if col.startswith('{}__'.format(label)):
-            jlip.append(col)
-    return jlip
+    return [col for col in df.columns if col.startswith('{}__'.format(label))]
 
 
 def load_project(path, project_name):
@@ -28,28 +24,24 @@ def load_project(path, project_name):
 
 def load_all_projects(path):
     """loads all projects from a folder"""
-    projects = {}
-    for project_name in list_all_projects(path):
-        projects[project_name] = load_project(path=path, project_name=project_name)
-    return projects
+    return {
+        project_name: load_project(path=path, project_name=project_name)
+        for project_name in list_all_projects(path)
+    }
 
 
 def list_all_projects(path):
     """lists all projects from a folder"""
-    project_names = []
-    for file in os.listdir(path):
-        if not os.path.isfile(os.path.join(path, file)):
-            continue
-        project_names.append(file.split('.')[0])
-    return project_names
+    return [
+        file.split('.')[0]
+        for file in os.listdir(path)
+        if os.path.isfile(os.path.join(path, file))
+    ]
 
 
 def last_commits(df, num_commits=500):
     """return last num_commits"""
-    last_commits = []
-    for c in df['commit'].unique()[-num_commits:]:  # order is preserved here (nice!)
-        last_commits.append(c)
-    return last_commits
+    return [c for c in df['commit'].unique()[-num_commits:]]
 
 
 def bugs_later_than(df, cutoff_date):
@@ -192,8 +184,7 @@ def costs(test_df, predictions, C):
 
 def score_model(test_df, y_pred):
     """calculates the scores for a model"""
-    scores = {}
-    scores['mcc'] = matthews_corrcoef(test_df['is_inducing'], y_pred)
+    scores = {'mcc': matthews_corrcoef(test_df['is_inducing'], y_pred)}
     scores['c_lower'] = lower_bound(test_df, y_pred)
     scores['c_upper'] = upper_bound(test_df, y_pred)
     scores['cost_1000']  = costs(test_df, y_pred, 1000)
@@ -216,8 +207,7 @@ def write_scores(path, approach_name, project, scores):
     if not path.endswith('/') and len(path)>0:
         path += '/'
     file_name = path+approach_name+'.csv'
-    values = []
-    values.append(project)
+    values = [project]
     for score_value in scores.values():
         values.append(score_value)
 
@@ -228,8 +218,7 @@ def write_scores(path, approach_name, project, scores):
     with open(file_name, 'a') as f:
         writer = csv.writer(f)
         if write_header:
-            header = []
-            header.append('project')
+            header = ['project']
             for score_name in scores:
                 header.append(score_name)
             writer.writerow(header)

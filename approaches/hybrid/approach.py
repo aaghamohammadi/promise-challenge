@@ -23,6 +23,8 @@ def approach():
     drop_months_end = int(args[4])
     num_test_commits = int(args[5])
 
+    # we recommend using a fixed random seed for reproducibility, but this is up to you
+    RANDOM_SEED = 42
     ######################################
     # Loop for within project prediction #
     # Loads only one project at a time   #
@@ -75,8 +77,6 @@ def approach():
         y_train = train_df['is_inducing']
         y_test = test_df['is_inducing']
 
-        # we recommend using a fixed random seed for reproducibility, but this is up to you
-        RANDOM_SEED = 42
         np.random.seed(RANDOM_SEED)
 
         # we resample with SMOTE and build a random forest for our baseline
@@ -98,20 +98,16 @@ def approach():
         sum_pred_rf = []
         sum_pred_xgb = []
         for i in range(len(preds_rf[0])):
-            temp_sum = 0
-            for j in range(20):
-                temp_sum += preds_rf[j][i][1]
+            temp_sum = sum(preds_rf[j][i][1] for j in range(20))
             sum_pred_rf.append(temp_sum / 20)
-    
+
         for i in range(len(preds_xgb[0])):
-            temp_sum = 0
-            for j in range(20):
-                temp_sum += preds_xgb[j][i][1]
+            temp_sum = sum(preds_xgb[j][i][1] for j in range(20))
             sum_pred_xgb.append(temp_sum / 20)
 
         y_pred_list = []
         for i in range(len(sum_pred_xgb)):
-            if (sum_pred_xgb[i] + sum_pred_rf[i]) / 2 < 0.5:
+            if sum_pred_xgb[i] + sum_pred_rf[i] < 0.5 * 2:
                 y_pred_list.append(False)
             else:
                 y_pred_list.append(True)

@@ -56,9 +56,9 @@ def approach():
         # 
         # we use all available features for our baseline
 
-        train_df = train_df.sample(frac=0.2)
+        # train_df = train_df.sample(frac=0.2)
 
-        with open('selected_features.csv', newline='') as csvfile:
+        with open('200_selected_features.csv', newline='') as csvfile:
             spamreader = csv.reader(csvfile)
             feature_names = next(spamreader)
 
@@ -78,15 +78,17 @@ def approach():
 
         # we resample with SMOTE and build a random forest for our baseline
         X_res, y_res = SMOTE(random_state=RANDOM_SEED).fit_resample(X_train, y_train)
-        rf = RandomForestClassifier(random_state=RANDOM_SEED, oob_score=True, n_estimators=50)
+        # TODO: for
+        rf = RandomForestClassifier(random_state=RANDOM_SEED, oob_score=True, n_estimators=200, max_features="log2", n_jobs=-1)
         rf.fit(X_res, y_res)
 
         importances = rf.feature_importances_
         std = np.std([tree.feature_importances_ for tree in rf.estimators_], axis=0)
 
         y_pred = rf.predict(X_test)
+        # TODO: end of loop
 
-        dump(rf, '50_important_features.joblib')
+        dump(rf, '200_important_features_rf.joblib')
 
         ######################################################
         # DO NOT TOUCH FROM HERE                             #

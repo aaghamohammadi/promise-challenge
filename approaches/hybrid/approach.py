@@ -85,38 +85,20 @@ def approach():
         preds_rf = []
         preds_xgb = []
         for r_seed in range(20):
-            rf = RandomForestClassifier(random_state=r_seed, oob_score=True, n_estimators=50, max_depth=25, max_features="log2", n_jobs=-1)
+            rf = RandomForestClassifier(random_state=r_seed, oob_score=True, n_estimators=200, max_features="log2", n_jobs=-1)
             rf.fit(X_res, y_res)
 
-            xgbst = xgb.XGBClassifier(n_jobs=-1, random_state=r_seed, max_depth=100, learning_rate=0.2)
+            xgbst = xgb.XGBClassifier(random_state=r_seed, learning_rate=0.2, n_jobs=-1)
             xgbst.fit(X_res, y_res)
 
-            preds_rf.append(rf.predict_proba(X_test))
-            preds_xgb.append(xgbst.predict_proba(X_test))
+            preds_rf.append(rf.predict_proba(X_test)[:,1])
+            preds_xgb.append(xgbst.predict_proba(X_test)[:,1])
 
         # TODO: end of loop
-        sum_pred_rf = []
-        sum_pred_xgb = []
-        for i in range(len(preds_rf[0])):
-            temp_sum = 0
-            for j in range(20):
-                temp_sum += preds_rf[j][i][1]
-            sum_pred_rf.append(temp_sum / 20)
-    
-        for i in range(len(preds_xgb[0])):
-            temp_sum = 0
-            for j in range(20):
-                temp_sum += preds_xgb[j][i][1]
-            sum_pred_xgb.append(temp_sum / 20)
+        y_pred_rf = np.vstack(preds_rf).T.mean(axis=1)
+        y_pred_xgb = np.vstack(preds_xgb).T.mean(axis=1)
 
-        y_pred_list = []
-        for i in range(len(sum_pred_xgb)):
-            if (sum_pred_xgb[i] + sum_pred_rf[i]) / 2 < 0.5:
-                y_pred_list.append(False)
-            else:
-                y_pred_list.append(True)
-
-        y_pred = np.array(y_pred_list)
+        y_pred = (y_pred_rf + y_pred_xgb) / 2
 
         # dump(rf, '200_important_features_rf.joblib')
 
@@ -125,7 +107,7 @@ def approach():
         # This is where the scores are calculated and stored #
         ######################################################
 
-        scores = score_model(test_df, y_pred)
+        scores = score_model(test_df, y_pred >= 0.5)
         print_summary(train_df, test_df, scores)
         write_scores(score_path, approach_name, project_name, scores)
 

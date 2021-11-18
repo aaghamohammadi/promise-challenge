@@ -54,13 +54,15 @@ def approach():
         # 
         # we use all available features for our baseline
 
-        train_df = train_df.sample(frac=0.2)
+        with open('200_selected_features.csv', newline='') as csvfile:
+            spamreader = csv.reader(csvfile)
+            feature_names = next(spamreader)
 
-        n_rows = train_df.shape[0]
-        n_columns = train_df.shape[1]
+        train_df_new = pd.concat([train_df[feat] for feat in feature_names], axis=1)
+        test_df_new = pd.concat([test_df[feat] for feat in feature_names], axis=1)
 
-        X_train = train_df[ALL_FEATURES].values
-        X_test = test_df[ALL_FEATURES].values
+        X_train = train_df_new.values
+        X_test = test_df_new.values
 
         # binary labels are in the column 'is_inducing'
         y_train = train_df['is_inducing']

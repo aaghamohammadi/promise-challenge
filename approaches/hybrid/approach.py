@@ -88,7 +88,7 @@ def approach():
             rf = RandomForestClassifier(random_state=r_seed, oob_score=True, n_estimators=200, max_features="log2", n_jobs=-1)
             rf.fit(X_res, y_res)
 
-            xgbst = xgb.XGBClassifier(random_state=r_seed, learning_rate=0.2, n_jobs=-1)
+            xgbst = xgb.XGBClassifier(random_state=r_seed, n_jobs=-1, n_estimators=250, max_depth=5 + random.randint(-3,3), learning_rate=0.2)
             xgbst.fit(X_res, y_res)
 
             preds_rf.append(rf.predict_proba(X_test)[:,1])
@@ -96,7 +96,7 @@ def approach():
 
         # TODO: end of loop
         y_pred_rf = np.vstack(preds_rf).T.mean(axis=1)
-        y_pred_xgb = np.vstack(preds_xgb).T.mean(axis=1)
+        y_pred_xgb = np.vstack(preds_xgb).T.max(axis=1)
 
         y_pred = (y_pred_rf + y_pred_xgb) / 2
 
